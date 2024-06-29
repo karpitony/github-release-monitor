@@ -16,15 +16,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
 
     - name: Install dependencies
-      run: pip install requests
+      run: pip install requests gitpython
 
     - name: Run download recording script
       env:
         GITHUB_TOKEN: ${{ secrets.YOUR_GITHUB_TOKEN }}  # GitHub API 토큰 설정
-      run: python script/update_download_stats.py
+      run: python scripts/update_download_stats.py
