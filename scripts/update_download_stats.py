@@ -5,20 +5,16 @@ import csv
 from datetime import datetime
 from urllib.parse import urlparse
 
-# settings.json 파일에서 리포지토리 목록 가져오기
+
 with open('settings.json', 'r') as f:
     settings = json.load(f)
 
 repositories = settings.get("repository_link", [])
 
-# GitHub API 토큰 (환경 변수에서 가져오기)
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
-
-# 현재 날짜
 today = datetime.now().strftime('%Y-%m-%d')
 
 def fetch_releases(repo_url):
-    # URL 파싱하여 사용자명과 리포지토리명 추출
     parsed_url = urlparse(repo_url)
     path_parts = parsed_url.path.strip('/').split('/')
     user, repo = path_parts[-2], path_parts[-1]
@@ -26,6 +22,10 @@ def fetch_releases(repo_url):
     api_url = f'https://api.github.com/repos/{user}/{repo}/releases'
     headers = {'Authorization': f'token {GITHUB_TOKEN}'} if GITHUB_TOKEN else {}
     response = requests.get(api_url, headers=headers)
+    
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch releases for {user}/{repo}, status code: {response.status_code}")
+    
     return response.json(), user, repo
 
 def write_csv(file_path, data, headers):
@@ -44,8 +44,12 @@ def update_csv(file_path, new_row, headers):
             rows = list(reader)
     
     if rows:
-        if rows[1][0] == new_row[0]:  # 중복값 처리
-            rows[1] = new_row
+        # 기존 데이터의 첫 행을 헤더로, 두 번째 행을 데이터로 간주
+        header, *data_rows = rows
+        existing_row = data_rows[0] if data_rows else None
+
+        if existing_row and existing_row[1:] == new_row[1:]:  # total과 에셋들을 비교
+            existing_row[-1] = new_row[-1]  # 중복 시 lastday만 업데이트
         else:
             rows.insert(1, new_row)
     else:
@@ -65,7 +69,11 @@ def get_asset_downloads(assets):
     return download_counts
 
 for repo_url in repositories:
-    releases, user, repo = fetch_releases(repo_url)
+    try:
+        releases, user, repo = fetch_releases(repo_url)
+    except Exception as e:
+        print(f"Error fetching releases: {e}")
+        continue
 
     repo_folder = f"{repo}"
     os.makedirs(repo_folder, exist_ok=True)
