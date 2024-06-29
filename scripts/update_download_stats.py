@@ -23,12 +23,13 @@ def fetch_releases(repo_url):
 
 
 def update_csv(file_path, new_row, headers):
+    
     rows = []
     if os.path.isfile(file_path):
         with open(file_path, mode='r', newline='') as file:
             reader = csv.reader(file)
             rows = list(reader)
-    
+    isFirst = False
     if rows:
         existing_headers = rows[0]
         existing_row = rows[1]
@@ -53,11 +54,17 @@ def update_csv(file_path, new_row, headers):
             rows.insert(1, new_row)
     else:
         rows.append(new_row)
+        isFirst = True
         
     with open(file_path, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(headers)
         writer.writerows(rows)
+        
+        if isFirst:
+            my_repo.git.add(file_path)
+        my_repo.git.commit('-m', f'edit {file_path}')
+        my_repo.git.push()
 
 
 def get_asset_downloads(assets):
@@ -124,4 +131,5 @@ if __name__ == "__main__":
 
         update_csv(total_file, total_data, ['firstday', 'total', 'lastday'])
 
+    
     print("Download counts recorded successfully.")
