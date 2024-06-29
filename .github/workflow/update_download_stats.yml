@@ -1,0 +1,9 @@
+name: Update Download Stats
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 매일 자정에 실행
+
+jobs:
+  update-downloads:
+    runs-on: ubuntu-latest
