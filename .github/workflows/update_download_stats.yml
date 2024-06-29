@@ -27,4 +27,4 @@ jobs:
     - name: Run download recording script
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub API 토큰 설정
-      run: python your_script.py
+      run: python update_download_stats.py
