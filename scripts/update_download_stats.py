@@ -5,7 +5,6 @@ import csv
 from datetime import datetime
 from urllib.parse import urlparse
 
-
 def fetch_releases(repo_url):
     parsed_url = urlparse(repo_url)
     path_parts = parsed_url.path.strip('/').split('/')
@@ -19,7 +18,6 @@ def fetch_releases(repo_url):
         raise Exception(f"Failed to fetch releases for {user}/{repo}, status code: {response.status_code}")
     
     return response.json(), user, repo
-
 
 def update_csv(file_path, new_row, headers):
     rows = []
@@ -35,7 +33,6 @@ def update_csv(file_path, new_row, headers):
         writer.writerow(headers)
         writer.writerows(rows)
 
-
 def get_asset_downloads(assets):
     download_counts = {}
     for asset in assets:
@@ -44,14 +41,12 @@ def get_asset_downloads(assets):
         download_counts[asset_name] = download_count
     return download_counts
 
-
 def update_project_info_json(new_folder, config_data):
     if new_folder not in config_data["folder_list"]:
         config_data["folder_list"].append(new_folder)
         config_data["last_update"] = datetime.now().strftime('%Y-%m-%d')
         with open('config.json', 'w', encoding='utf-8') as file:
             json.dump(config_data, file, indent=4, ensure_ascii=False)
-
 
 if __name__ == "__main__":
     # Load configuration from config.json
@@ -93,8 +88,8 @@ if __name__ == "__main__":
 
         total_file = os.path.join(repo_folder, f"{repo}_total.csv")
         combined_total = sum(sum(get_asset_downloads(release['assets']).values()) for release in releases)
-        total_data = [today, combined_total] + [0] * (len(headers) - 2)  # Initialize all asset columns with 0
+        total_data = [today, combined_total]
         
-        update_csv(total_file, total_data, headers)
+        update_csv(total_file, total_data, ['Date', 'Total'])
 
     print("Download counts recorded successfully.")
