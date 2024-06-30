@@ -4,7 +4,6 @@ import requests
 import csv
 from datetime import datetime
 from urllib.parse import urlparse
-import git
 
 
 def fetch_releases(repo_url):
@@ -61,10 +60,6 @@ def update_csv(file_path, new_row, headers, today):
         writer.writerow(headers)
         writer.writerows(rows)
         
-        if isFirst:
-            my_repo.git.add(file_path)
-        my_repo.git.commit('-m', f'Last update ; {today}')
-        my_repo.git.push()
 
 
 def get_asset_downloads(assets):
@@ -83,9 +78,6 @@ if __name__ == "__main__":
     repositories = settings.get("repository_link")
     GITHUB_TOKEN = os.getenv('YOUR_GITHUB_TOKEN')
     today = datetime.now().strftime('%Y-%m-%d')
-    
-    # Initialize Git repository object
-    my_repo = git.Repo('.')
     
     for repo_url in repositories:
         try:
@@ -131,5 +123,4 @@ if __name__ == "__main__":
 
         update_csv(total_file, total_data, ['firstday', 'total', 'lastday'], today)
 
-    
     print("Download counts recorded successfully.")
