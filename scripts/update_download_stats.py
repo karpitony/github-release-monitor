@@ -21,45 +21,19 @@ def fetch_releases(repo_url):
     return response.json(), user, repo
 
 
-def update_csv(file_path, new_row, headers, today):
-    
+def update_csv(file_path, new_row, headers):
     rows = []
     if os.path.isfile(file_path):
-        with open(file_path, mode='r', newline='') as file:
+        with open(file_path, mode='r', newline='', encoding='utf-8') as file:
             reader = csv.reader(file)
             rows = list(reader)
-    isFirst = False
-    if rows:
-        existing_headers = rows[0]
-        existing_row = rows[1]
-        
-        # Remove columns missing in new headers from existing rows
-        extra_columns = [col for col in existing_headers if col not in headers]
-        for row in rows:
-            for col in extra_columns:
-                if col in row:
-                    row.remove(col)
-        
-        # Add columns present in new headers but missing in existing rows
-        missing_columns = [col for col in headers if col not in existing_headers]
-        for row in rows:
-            for col in missing_columns:
-                row.append(0)
 
-        # Update lastday if existing and new data rows are identical
-        if existing_row[1:] == new_row[1:]:
-            existing_row[-1] = new_row[-1]
-        else:
-            rows.insert(1, new_row)
-    else:
-        rows.append(new_row)
-        isFirst = True
+    rows.insert(1, new_row)
         
-    with open(file_path, mode='w', newline='') as file:
+    with open(file_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(headers)
         writer.writerows(rows)
-        
 
 
 def get_asset_downloads(assets):
@@ -71,11 +45,20 @@ def get_asset_downloads(assets):
     return download_counts
 
 
-if __name__ == "__main__":
-    with open('settings.json', 'r') as f:
-        settings = json.load(f)
+def update_project_info_json(new_folder, config_data):
+    if new_folder not in config_data["folder_list"]:
+        config_data["folder_list"].append(new_folder)
+        config_data["last_update"] = datetime.now().strftime('%Y-%m-%d')
+        with open('config.json', 'w', encoding='utf-8') as file:
+            json.dump(config_data, file, indent=4, ensure_ascii=False)
 
-    repositories = settings.get("repository_link")
+
+if __name__ == "__main__":
+    # Load configuration from config.json
+    with open('config.json', 'r', encoding='utf-8') as f:
+        config_data = json.load(f)
+
+    repositories = config_data.get("repository_links")
     GITHUB_TOKEN = os.getenv('YOUR_GITHUB_TOKEN')
     today = datetime.now().strftime('%Y-%m-%d')
     
@@ -88,39 +71,30 @@ if __name__ == "__main__":
             continue
 
         repo_folder = f"{repo}"
+        is_new_folder = not os.path.exists(repo_folder)
         os.makedirs(repo_folder, exist_ok=True)
 
-        releases_data = {}
-        version_assets = {}
+        if is_new_folder:
+            # Update config.json with new folder
+            update_project_info_json(repo_folder, config_data)
 
         for release in releases:
             release_tag = release['tag_name']
             release_assets = release['assets']
             
             asset_downloads = get_asset_downloads(release_assets)
-            releases_data[release_tag] = asset_downloads
             
-            version_assets[release_tag] = sorted(set(asset_downloads.keys()))
-
-        for release_tag, asset_downloads in releases_data.items():
             release_file = os.path.join(repo_folder, f"{repo}_{release_tag}.csv")
-            assets_name = version_assets.get(release_tag, [])
+            headers = ['Date', 'Total'] + list(asset_downloads.keys())
+            
+            release_data = [today, sum(asset_downloads.values())] + list(asset_downloads.values())
+            
+            update_csv(release_file, release_data, headers)
 
-            headers = ['firstday', 'total'] + assets_name + ['lastday']
-            release_data = [today]
-            total_downloads = sum(asset_downloads.values())
-            release_data.append(total_downloads)
-            for asset_name in assets_name:
-                release_data.append(asset_downloads.get(asset_name, 0))
-            release_data.append(today)
-
-            update_csv(release_file, release_data, headers, today)
-
-       
         total_file = os.path.join(repo_folder, f"{repo}_total.csv")
-        combined_total = sum(sum(asset_downloads.values()) for asset_downloads in releases_data.values())
-        total_data = [today, combined_total, today]
-
-        update_csv(total_file, total_data, ['firstday', 'total', 'lastday'], today)
+        combined_total = sum(sum(get_asset_downloads(release['assets']).values()) for release in releases)
+        total_data = [today, combined_total] + [0] * (len(headers) - 2)  # Initialize all asset columns with 0
+        
+        update_csv(total_file, total_data, headers)
 
     print("Download counts recorded successfully.")
