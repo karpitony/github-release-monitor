@@ -22,7 +22,7 @@ def fetch_releases(repo_url):
     return response.json(), user, repo
 
 
-def update_csv(file_path, new_row, headers):
+def update_csv(file_path, new_row, headers, today):
     
     rows = []
     if os.path.isfile(file_path):
@@ -63,7 +63,7 @@ def update_csv(file_path, new_row, headers):
         
         if isFirst:
             my_repo.git.add(file_path)
-        my_repo.git.commit('-m', f'edit {file_path}')
+        my_repo.git.commit('-m', f'Last update ; {today}')
         my_repo.git.push()
 
 
@@ -122,14 +122,14 @@ if __name__ == "__main__":
                 release_data.append(asset_downloads.get(asset_name, 0))
             release_data.append(today)
 
-            update_csv(release_file, release_data, headers)
+            update_csv(release_file, release_data, headers, today)
 
        
         total_file = os.path.join(repo_folder, f"{repo}_total.csv")
         combined_total = sum(sum(asset_downloads.values()) for asset_downloads in releases_data.values())
         total_data = [today, combined_total, today]
 
-        update_csv(total_file, total_data, ['firstday', 'total', 'lastday'])
+        update_csv(total_file, total_data, ['firstday', 'total', 'lastday'], today)
 
     
     print("Download counts recorded successfully.")
