@@ -1,6 +1,6 @@
 async function fetchConfig() {
   try {
-    const res = await fetch('config.json')
+    const res = await fetch(`${window.location.href}/config.json`)
     return res.json()
   } catch (err) {
     console.err('Failed to fetch config file')
@@ -48,7 +48,7 @@ function renderFolderList(folders) {
     }
 
     const prepare = async () => {
-      res = await fetch(`${name}/${name}_total.csv`)
+      res = await fetch(`${window.location.href}/${name}/${name}_total.csv`)
       const totalCsv = parseCsv(await res.text())
     
       popupTitle.innerText = name
