@@ -41,9 +41,9 @@ def update_csv(file_path, new_row, headers):
 
     with open(file_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        writer.writerow(headers)
+        if rows and rows[0] != headers:  # If headers are missing or incorrect
+            writer.writerow(headers)
         writer.writerows(rows)
-
 
 def get_asset_downloads(assets):
     download_counts = {}
