@@ -22,12 +22,14 @@ def fetch_releases(repo_url):
 def update_csv(file_path, new_row, headers):
     rows = []
     updated = False
+
     if os.path.isfile(file_path):
         with open(file_path, mode='r', newline='', encoding='utf-8') as file:
             reader = csv.reader(file)
             rows = list(reader)
+            
             # Check if today's date already exists in the CSV
-            for i, row in enumerate(rows):
+            for i, row in enumerate(rows[1:], start=1):  # Skip the header row
                 if len(row) > 0 and row[0] == new_row[0]:  # Assuming new_row[0] is the date
                     # Update existing row
                     rows[i] = new_row
@@ -35,8 +37,8 @@ def update_csv(file_path, new_row, headers):
                     break
 
     if not updated:
-        rows.insert(1, new_row)
-        
+        rows.append(new_row)
+
     with open(file_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(headers)
