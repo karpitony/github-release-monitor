@@ -3,8 +3,8 @@ async function fetchConfig() {
     const res = await fetch(`${window.location.href}/config.json`)
     return res.json()
   } catch (err) {
-    console.err('Failed to fetch config file')
-    console.err(err)
+    console.error('Failed to fetch config file')
+    console.error(err)
   }
 }
 
@@ -12,6 +12,7 @@ let popup = null
 let content = null
 let totalCanvas = null
 let popupTitle = null
+let chart = null // 차트를 저장할 변수
 
 function renderFolderList(folders) {
   const container = document.getElementById('folder-container')
@@ -30,7 +31,11 @@ function renderFolderList(folders) {
       console.log(labels)
       const ctx = totalCanvas.getContext('2d')
 
-      const chart = new Chart(ctx, {
+      if (chart) {
+        chart.destroy() // 기존의 차트가 있을 경우 파괴
+      }
+
+      chart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: labels,
@@ -48,7 +53,7 @@ function renderFolderList(folders) {
     }
 
     const prepare = async () => {
-      res = await fetch(`${window.location.href}/${name}/${name}_total.csv`)
+      const res = await fetch(`${window.location.href}/${name}/${name}_total.csv`)
       const totalCsv = parseCsv(await res.text())
     
       popupTitle.innerText = name
@@ -67,7 +72,6 @@ function parseCsv(content) {
     .filter(it => it)
     .map(line => line.split(',').map(it => it.trim()))
 }
-
 
 function showPopup() {
   popup.classList.remove('hidden')
