@@ -37,11 +37,11 @@ def update_csv(file_path, new_row, headers):
                     break
 
     if not updated:
-        rows.append(new_row)
+        rows.insert(1, new_row)  # Insert new row right after the header
 
     with open(file_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        if rows and rows[0] != headers:  # If headers are missing or incorrect
+        if not rows or rows[0] != headers:  # If headers are missing or incorrect
             writer.writerow(headers)
         writer.writerows(rows)
 
