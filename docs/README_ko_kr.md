@@ -1,5 +1,5 @@
 # github-release-monitor
-[![Stacks](https://skillicons.dev/icons?i=githubactions,python)](https://skillicons.dev)
+[![Stacks](https://skillicons.dev/icons?i=html,css,js,githubactions,python)](https://skillicons.dev)
 
 ## 사전 환경설정
 **1. 먼저, 리포지토리를 `fork` 해주세요.**
