@@ -40,3 +40,4 @@ jobs:
         else
           git commit -m "Last Update : $(date '+%Y-%m-%d')"
           git push
+        fi
